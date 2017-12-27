@@ -9,7 +9,6 @@ var fs = require('fs');
 var express = require('express');
 var app = express();
 var MongoClient = require('mongodb').MongoClient;
-var murl = 'mongodb://url-shortener:P%40ssw0rd@ds137336.mlab.com:37336/url-shortener-es';
 var db;
 
 if (!process.env.DISABLE_XORIGIN) {
@@ -88,12 +87,12 @@ app.use(function(err, req, res, next) {
   }  
 })
 
-MongoClient.connect(murl, (err, dbConn) => {
+MongoClient.connect(process.env.MURL, (err, dbConn) => {
   if (err) {
     console.log('Unable to connect to the mongoDB server. Error:', err);
   }
   else {
-    console.log('Connection established to', murl);
+    console.log('Connection established to mongoDB server.');
     db = dbConn;
     app.listen(process.env.PORT, function () {
       console.log('Node.js listening ...');

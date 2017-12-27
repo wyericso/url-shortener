@@ -8,6 +8,9 @@
 var fs = require('fs');
 var express = require('express');
 var app = express();
+var MongoClient = require('mongodb').MongoClient;
+var murl = 'mongodb://url-shortener:P%40ssw0rd@ds137336.mlab.com:37336/url-shortener-es';
+var db;
 
 if (!process.env.DISABLE_XORIGIN) {
   app.use(function(req, res, next) {
@@ -43,8 +46,37 @@ app.route('/')
   res.status(404);
   res.type('txt').send('Not found');
 }); */
-app.use(function(req, res, next){
-  res.end(req.url);
+app.use('/new', (req, res, next) => {
+  var hostURL = 'https://' + req.get('host');
+  // if containing valid hyperlink
+  if (/https?:\/\/.+\..+/.test(req.url)) {
+    db.collection('index').findOneAndUpdate({}, {$inc: {index: 1}}, (err, docs) => {
+      var urlObj = {
+        'short_url': hostURL + '/' + docs.value.index.toString(),
+        'original_url': req.url.replace(/^\/*/, '')
+      };
+      db.collection('urls').insertOne(urlObj, {forceServerObjectId: true}, (err, result) => {
+        res.end(JSON.stringify(urlObj));
+      });
+    });
+  }
+  else {
+    res.end(JSON.stringify({'error': 'Wrong url format, make sure you have a valid protocol and real site.'}));
+  }
+});
+
+app.use(/\/\d+$/, (req, res, next) => {
+  var hostURL = 'https://' + req.get('host');
+  var fullURL = hostURL + req.originalUrl;
+  console.log(fullURL);
+  db.collection('urls').findOne({short_url: fullURL}, (err, doc) => {
+    if (doc) {
+      res.redirect(doc.original_url);
+    }
+    else {
+      res.end(JSON.stringify({'error': 'No such short URL.'}));
+    }
+  });
 });
 
 // Error Middleware
@@ -56,7 +88,15 @@ app.use(function(err, req, res, next) {
   }  
 })
 
-app.listen(process.env.PORT, function () {
-  console.log('Node.js listening ...');
+MongoClient.connect(murl, (err, dbConn) => {
+  if (err) {
+    console.log('Unable to connect to the mongoDB server. Error:', err);
+  }
+  else {
+    console.log('Connection established to', murl);
+    db = dbConn;
+    app.listen(process.env.PORT, function () {
+      console.log('Node.js listening ...');
+    });
+  }
 });
-

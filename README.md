@@ -1,7 +1,7 @@
 URL Shortener Microservice
 =========================
 
-**Objective:** Build a full stack JavaScript app that is functionally similar to this: [https://url-shortener-microservice-es.glitch.me](https://url-shortener-microservice-es.glitch.me) and deploy it to Glitch.
+**Objective:** Build a full stack JavaScript app that is functionally similar to this: [https://little-url.herokuapp.com/](https://little-url.herokuapp.com/) and deploy it to Glitch.
 
 User Stories
 ------------
